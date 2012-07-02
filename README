@@ -1,0 +1,3 @@
+Python modules required:
+- Python 3+
+- pySerial (tested with 2.6)
