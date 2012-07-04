@@ -24,12 +24,64 @@ def accumulate(buffer, offset, nbr):
         accu = accu*256 + buffer[offset + i];
     return accu
 
+def processInterfaceMessage(msg):
+    data = {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
+    packetLength = msg[0]
+    if packetLength != 13:
+        print("Message with invalid length, got " + str(packetLength) + " expected 10")
+        return data
+    subtype = msg[2]
+    seqNbr = msg[3]
+
+    type = msg[5]
+    fw_version = msg[6]
+    operation_mode = msg[7]
+    msg4 = msg[8]
+    msg5 = msg[9]
+
+    protoRFU = (msg4 & 0x80) != 0
+    protoRollerTrol = (msg4 & 0x40) != 0
+    protoProGuard = (msg4 & 0x20) != 0
+    protoFS20 = (msg4 & 0x10) != 0
+    protoLaCrosse = (msg4 & 0x08) != 0
+    protoHideki = (msg4 & 0x04) != 0
+    protoLightwaveRF = (msg4 & 0x02) != 0
+    protoMertik = (msg4 & 0x01) != 0
+    protoVisonic = (msg5 & 0x80) != 0
+    protoATI = (msg5 & 0x40) != 0
+    protoOregonScientific = (msg5 & 0x20) != 0
+    protoIkea = (msg5 & 0x10) != 0
+    protoHomeEasy = (msg5 & 0x08) != 0
+    protoAC = (msg5 & 0x04) != 0
+    protoARC = (msg5 & 0x02) != 0
+    protoX10 = (msg5 & 0x01) != 0
+
+    print("Firmware version " + str(fw_version))
+    print("Operation mode " + str(operation_mode))
+    print("Proto RFU " + str(protoRFU))
+    print("Proto RollerTrol " + str(protoRollerTrol))
+    print("Proto ProGuard " + str(protoProGuard))
+    print("Proto FS20 " + str(protoFS20))
+    print("Proto LaCrosse " + str(protoLaCrosse))
+    print("Proto Hideki " + str(protoHideki))
+    print("Proto LightwaveRF " + str(protoLightwaveRF))
+    print("Proto Mertik " + str(protoMertik))
+    print("Proto Visonic " + str(protoVisonic))
+    print("Proto ATI " + str(protoATI))
+    print("Proto Oregon Scientific " + str(protoOregonScientific))
+    print("Proto Ikea " + str(protoIkea))
+    print("Proto HomeEasy " + str(protoHomeEasy))
+    print("Proto AC " + str(protoAC))
+    print("Proto ARC " + str(protoARC))
+    print("Proto X10 " + str(protoX10))
+    return data
+
 
 def processTempHumSensor(msg):
     packetLength = msg[0]
     if packetLength != 10:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
-        return {'datetime': datetime.datetime.utcnow() , 'msg': base64.encodebytes(msg)}
+        return {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -50,7 +102,7 @@ def processTempHumSensor(msg):
     print("Humidity status " + str(humidityStatus))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': datetime.datetime.utcnow() ,'packetLength': packetLength, 'packetType': msg[1], \
+    return {'datetime': time.time() ,'packetLength': packetLength, 'packetType': msg[1], \
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'temperature': temperature,   \
             'humidity': humidity, 'humidityStatus': humidityStatus, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
 
@@ -58,7 +110,7 @@ def processEnergyUsageSensor(msg):
     packetLength = msg[0]
     if packetLength != 17:
         print("Message with invalid length, got " + str(packetLength) + " expected 17")
-        return {'datetime': datetime.datetime.utcnow() , 'msg': base64.encodebytes(msg)}
+        return {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -74,7 +126,7 @@ def processEnergyUsageSensor(msg):
     print("Total power " + str(total))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': datetime.datetime.utcnow() ,'packetLength': packetLength, 'packetType': msg[1],\
+    return {'datetime': time.time() ,'packetLength': packetLength, 'packetType': msg[1],\
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'count':count, 'instant': instant, \
             'total': total, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
 
@@ -82,10 +134,11 @@ def parseMessage(msg):
     print('Packet length ' + str(msg[0]))
     packetType = msg[1]
 
-    data = {'datetime': datetime.datetime.utcnow() ,'msg': base64.encodebytes(msg)}
+    data = {'datetime': time.time() ,'msg': base64.encodebytes(msg)}
 
     if packetType == 1:
         print("Received interface control (0x01) message")
+        data = processInterfaceMessage(msg)
     elif packetType == 2:
         print("Received Receiver/Transmitter (0x02) message")
     elif packetType == 3:
@@ -124,6 +177,7 @@ def sendData(data, url):
     return
 
 def main():
+    global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
     parser.add_argument("-u", "--url", dest="url", help = "post data to URL", metavar="URL", required=True)
@@ -141,7 +195,7 @@ def main():
     status = bytearray.fromhex("0D00000102000000000000000000")
 
     ser.write(reset)
-    time.sleep(0.05)
+    time.sleep(0.1)
     ser.flush()
     ser.write(status)
 
@@ -153,10 +207,14 @@ def main():
         if len(buffer) > 0:
             packetLength = buffer[0]
             if len(buffer) > packetLength:
-                msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
-                del buffer[0:packetLength+1] #remove message
-                data = parseMessage(msg)
-                sendData(data, args.url)
+                if packetLength == 0:
+                    print("Got actual message with length 0 - discarding")
+                    del buffer[0:1]
+                else:
+                    msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
+                    del buffer[0:packetLength+1] #remove message
+                    data = parseMessage(msg)
+                    sendData(data, args.url)
 
 
 
