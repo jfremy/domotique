@@ -5,7 +5,6 @@ import time
 import signal
 import sys
 import argparse
-import datetime
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -21,7 +20,7 @@ def signal_handler(signal, frame):
 def accumulate(buffer, offset, nbr):
     accu = 0
     for i in range(0,nbr):
-        accu = accu*256 + buffer[offset + i];
+        accu = accu*256 + buffer[offset + i]
     return accu
 
 def processInterfaceMessage(msg):
@@ -81,7 +80,7 @@ def processTempHumSensor(msg):
     packetLength = msg[0]
     if packetLength != 10:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
-        return {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
+        return {'datetime': time.time() * 1000 , 'msg': base64.encodebytes(msg)}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -102,7 +101,7 @@ def processTempHumSensor(msg):
     print("Humidity status " + str(humidityStatus))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': time.time() ,'packetLength': packetLength, 'packetType': msg[1], \
+    return {'datetime': time.time()*1000 ,'packetLength': packetLength, 'packetType': msg[1], \
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'temperature': temperature,   \
             'humidity': humidity, 'humidityStatus': humidityStatus, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
 
@@ -110,7 +109,7 @@ def processEnergyUsageSensor(msg):
     packetLength = msg[0]
     if packetLength != 17:
         print("Message with invalid length, got " + str(packetLength) + " expected 17")
-        return {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
+        return {'datetime': time.time()*1000 , 'msg': base64.encodebytes(msg)}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -126,7 +125,7 @@ def processEnergyUsageSensor(msg):
     print("Total power " + str(total))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': time.time() ,'packetLength': packetLength, 'packetType': msg[1],\
+    return {'datetime': time.time()*1000 ,'packetLength': packetLength, 'packetType': msg[1],\
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'count':count, 'instant': instant, \
             'total': total, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
 
@@ -134,7 +133,7 @@ def parseMessage(msg):
     print('Packet length ' + str(msg[0]))
     packetType = msg[1]
 
-    data = {'datetime': time.time() ,'msg': base64.encodebytes(msg)}
+    data = {'datetime': time.time()*1000 ,'msg': base64.encodebytes(msg)}
 
     if packetType == 1:
         print("Received interface control (0x01) message")
@@ -196,7 +195,7 @@ def main():
 
     ser.write(reset)
     time.sleep(0.1)
-    ser.flush()
+    ser.flushInput()
     ser.write(status)
 
     buffer = bytearray(b'')
