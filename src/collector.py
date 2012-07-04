@@ -24,7 +24,7 @@ def accumulate(buffer, offset, nbr):
     return accu
 
 def processInterfaceMessage(msg):
-    data = {'datetime': time.time() , 'msg': base64.encodebytes(msg)}
+    data = {'datetime': time.time()*1000 , 'msg': base64.encodebytes(msg)}
     packetLength = msg[0]
     if packetLength != 13:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
