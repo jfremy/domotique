@@ -9,6 +9,8 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import base64
+import datetime
+import json
 
 
 # Close on ctrl+C
@@ -17,6 +19,9 @@ def signal_handler(signal, frame):
     ser.close()
     sys.exit(0)
 
+def now():
+    return datetime.datetime.utcnow().isoformat('T')
+
 def accumulate(buffer, offset, nbr):
     accu = 0
     for i in range(0,nbr):
@@ -24,7 +29,7 @@ def accumulate(buffer, offset, nbr):
     return accu
 
 def processInterfaceMessage(msg):
-    data = {'datetime': time.time()*1000 , 'msg': base64.encodebytes(msg)}
+    data = { 'packetType': msg[1]}
     packetLength = msg[0]
     if packetLength != 13:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
@@ -80,7 +85,7 @@ def processTempHumSensor(msg):
     packetLength = msg[0]
     if packetLength != 10:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
-        return {'datetime': time.time() * 1000 , 'msg': base64.encodebytes(msg)}
+        return { 'packetType': msg[1]}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -101,15 +106,15 @@ def processTempHumSensor(msg):
     print("Humidity status " + str(humidityStatus))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': time.time()*1000 ,'packetLength': packetLength, 'packetType': msg[1], \
+    return {'packetLength': packetLength, 'packetType': msg[1], \
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'temperature': temperature,   \
-            'humidity': humidity, 'humidityStatus': humidityStatus, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
+            'humidity': humidity, 'humidityStatus': humidityStatus, 'battery': battery, 'RSSI': rssi}
 
 def processEnergyUsageSensor(msg):
     packetLength = msg[0]
     if packetLength != 17:
         print("Message with invalid length, got " + str(packetLength) + " expected 17")
-        return {'datetime': time.time()*1000 , 'msg': base64.encodebytes(msg)}
+        return { 'packetType': msg[1]}
 
     subtype = msg[2]
     seqNbr = msg[3]
@@ -125,15 +130,15 @@ def processEnergyUsageSensor(msg):
     print("Total power " + str(total))
     print("Battery " + str(battery))
     print("RSSI " + str(rssi))
-    return {'datetime': time.time()*1000 ,'packetLength': packetLength, 'packetType': msg[1],\
+    return {'packetLength': packetLength, 'packetType': msg[1],\
             'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'count':count, 'instant': instant, \
-            'total': total, 'battery': battery, 'RSSI': rssi, 'msg': base64.encodebytes(msg)}
+            'total': total, 'battery': battery, 'RSSI': rssi}
 
 def parseMessage(msg):
     print('Packet length ' + str(msg[0]))
     packetType = msg[1]
 
-    data = {'datetime': time.time()*1000 ,'msg': base64.encodebytes(msg)}
+    data = {'packetType': packetType}
 
     if packetType == 1:
         print("Received interface control (0x01) message")
@@ -168,8 +173,10 @@ def parseMessage(msg):
 
 def sendData(data, url):
     try:
-        params = urllib.parse.urlencode(data)
-        result = urllib.request.urlopen(url, params.encode('ascii'))
+        params = json.dumps([{'type': 'rfxcom' + str(data['packetType']),'time': now(), 'data': data}])
+        headers = {'Content-Type': 'application/json'}
+        req = urllib.request.Request(url, params.encode('utf-8'), headers)
+        result = urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
 
