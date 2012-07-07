@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Jeff's place status</title>
+    <style>
+
+        @import url(css/style.css);
+
+    </style>
+</head>
+<body>
+<select id="step">
+    <option value="6e4">1 minutes</option>
+    <option value="3e5">5 minutes</option>
+    <option value="36e5">1 hour</option>
+    <option value="864e5">1 day</option>
+</select>
+<script src="js/d3.v2.js" type='text/javascript'></script>
+<script src="js/cubism.v1.js" type='text/javascript'></script>
+<script type='text/javascript'>
+
+    var step = +cubism.option("step", 3e5);
+
+    var context = cubism.context()
+            .step(step)
+            .size(1440);
+
+
+    // Assumption is that the cube evaluator is on the same host, port - 1, same protocol
+    var protocol = location.protocol;
+    var hostname = location.hostname;
+    var port = Number(location.port || 80)-1;
+
+
+    var cube = context.cube(protocol + "//" + hostname + ":" + port);
+
+    // Add top and bottom axes to display the time.
+    d3.select("body").selectAll(".axis")
+            .data(["top", "bottom"])
+            .enter().append("div")
+            .attr("class", function(d) { return d + " axis"; })
+            .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+
+    // Add a mouseover rule.
+    d3.select("body").append("div")
+            .attr("class", "rule")
+            .call(context.rule());
+
+    //
+    d3.select("body").insert("div", ".bottom")
+            .attr("class", "group")
+            .call(function() { this.append("header").text("Power consumption"); })
+            .selectAll(".horizon")
+            .data([
+        {title: "Watts ", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
+    ])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+            .title(function(d) { return d.title; })
+            .metric(function(d) { return d.metric; }));
+
+    d3.select("body").insert("div", ".bottom")
+            .attr("class", "group")
+            .call(function() { this.append("header").text("Temperature"); })
+            .selectAll(".horizon")
+            .data([
+        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
+        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
+        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
+    ])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+            .title(function(d) { return d.title; })
+            .metric(function(d) { return d.metric; }));
+
+    d3.select("body").insert("div", ".bottom")
+            .attr("class", "group")
+            .call(function() { this.append("header").text("Humidity"); })
+            .selectAll(".horizon")
+            .data([
+        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
+        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
+        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
+    ])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+            .title(function(d) { return d.title; })
+            .metric(function(d) { return d.metric; }));
+
+
+    // On mousemove, reposition the chart values to match the rule.
+    context.on("focus", function(i) {
+        d3.selectAll(".value").style("right", i == null ? null : context.size() - i + "px");
+    });
+
+    // Initialize the step menu's selection.
+    d3.selectAll("#step option").property("selected", function() {
+        return this.value == step;
+    });
+
+    // Update the location on step change.
+    d3.select("#step").on("change", function() {
+        window.location = "?step=" + this.value + "&" + location.search.replace(/[?&]step=[^&]*(&|$)/g, "$1").substring(1);
+    });
+</script>
+</body>
+</html>
