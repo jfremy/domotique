@@ -40,6 +40,7 @@
             .data(["top", "bottom"])
             .enter().append("div")
             .attr("class", function(d) { return d + " axis"; })
+            .attr("heigh", 60 )
             .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
 
     // Add a mouseover rule.
@@ -53,7 +54,7 @@
             .call(function() { this.append("header").text("Power consumption"); })
             .selectAll(".horizon")
             .data([
-        {title: "Watts ", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
+        {title: "Appart (W)", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
     ])
             .enter().append("div")
             .attr("class", "horizon")
@@ -66,9 +67,9 @@
             .call(function() { this.append("header").text("Temperature"); })
             .selectAll(".horizon")
             .data([
-        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
-        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
-        {title: "°C ", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
+        {title: "Salon (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
+        {title: "Bureau (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
+        {title: "Chambre (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
     ])
             .enter().append("div")
             .attr("class", "horizon")
@@ -81,9 +82,9 @@
             .call(function() { this.append("header").text("Humidity"); })
             .selectAll(".horizon")
             .data([
-        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
-        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
-        {title: "% ", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
+        {title: "Salon (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
+        {title: "Bureau (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
+        {title: "Chambre (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
     ])
             .enter().append("div")
             .attr("class", "horizon")
