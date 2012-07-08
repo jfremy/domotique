@@ -40,7 +40,7 @@
             .data(["top", "bottom"])
             .enter().append("div")
             .attr("class", function(d) { return d + " axis"; })
-            .attr("heigh", 60 )
+            .attr("height", 60 )
             .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
 
     // Add a mouseover rule.
