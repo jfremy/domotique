@@ -8,7 +8,6 @@ import argparse
 import urllib.request
 import urllib.parse
 import urllib.error
-import base64
 import datetime
 import json
 
@@ -28,136 +27,152 @@ def accumulate(buffer, offset, nbr):
         accu = accu*256 + buffer[offset + i]
     return accu
 
-def processInterfaceMessage(msg):
+def processInterfaceMessage(msg, data):
     data = { 'packetType': msg[1]}
     packetLength = msg[0]
     if packetLength != 13:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
         return data
-    subtype = msg[2]
-    seqNbr = msg[3]
+    data["subType"] = msg[2]
+    data["seqNbr"] = msg[3]
 
-    type = msg[5]
-    fw_version = msg[6]
-    operation_mode = msg[7]
+    data["deviceType"] = msg[5]
+    data["fw_version"] = msg[6]
+    data["operation_mode"] = msg[7]
     msg4 = msg[8]
     msg5 = msg[9]
 
-    protoRFU = (msg4 & 0x80) != 0
-    protoRollerTrol = (msg4 & 0x40) != 0
-    protoProGuard = (msg4 & 0x20) != 0
-    protoFS20 = (msg4 & 0x10) != 0
-    protoLaCrosse = (msg4 & 0x08) != 0
-    protoHideki = (msg4 & 0x04) != 0
-    protoLightwaveRF = (msg4 & 0x02) != 0
-    protoMertik = (msg4 & 0x01) != 0
-    protoVisonic = (msg5 & 0x80) != 0
-    protoATI = (msg5 & 0x40) != 0
-    protoOregonScientific = (msg5 & 0x20) != 0
-    protoIkea = (msg5 & 0x10) != 0
-    protoHomeEasy = (msg5 & 0x08) != 0
-    protoAC = (msg5 & 0x04) != 0
-    protoARC = (msg5 & 0x02) != 0
-    protoX10 = (msg5 & 0x01) != 0
+    data["protoRFU"] = (msg4 & 0x80) != 0
+    data["protoRollerTrol"] = (msg4 & 0x40) != 0
+    data["protoProGuard"] = (msg4 & 0x20) != 0
+    data["protoFS20"] = (msg4 & 0x10) != 0
+    data["protoLaCrosse"] = (msg4 & 0x08) != 0
+    data["protoHideki"] = (msg4 & 0x04) != 0
+    data["protoLightwaveRF"] = (msg4 & 0x02) != 0
+    data["protoMertik"] = (msg4 & 0x01) != 0
+    data["protoVisonic"] = (msg5 & 0x80) != 0
+    data["protoATI"] = (msg5 & 0x40) != 0
+    data["protoOregonScientific"] = (msg5 & 0x20) != 0
+    data["protoIkea"] = (msg5 & 0x10) != 0
+    data["protoHomeEasy"] = (msg5 & 0x08) != 0
+    data["protoAC"] = (msg5 & 0x04) != 0
+    data["protoARC"] = (msg5 & 0x02) != 0
+    data["protoX10"] = (msg5 & 0x01) != 0
 
-    print("Firmware version " + str(fw_version))
-    print("Operation mode " + str(operation_mode))
-    print("Proto RFU " + str(protoRFU))
-    print("Proto RollerTrol " + str(protoRollerTrol))
-    print("Proto ProGuard " + str(protoProGuard))
-    print("Proto FS20 " + str(protoFS20))
-    print("Proto LaCrosse " + str(protoLaCrosse))
-    print("Proto Hideki " + str(protoHideki))
-    print("Proto LightwaveRF " + str(protoLightwaveRF))
-    print("Proto Mertik " + str(protoMertik))
-    print("Proto Visonic " + str(protoVisonic))
-    print("Proto ATI " + str(protoATI))
-    print("Proto Oregon Scientific " + str(protoOregonScientific))
-    print("Proto Ikea " + str(protoIkea))
-    print("Proto HomeEasy " + str(protoHomeEasy))
-    print("Proto AC " + str(protoAC))
-    print("Proto ARC " + str(protoARC))
-    print("Proto X10 " + str(protoX10))
+    print("Firmware version " + str(data.fw_version))
+    print("Operation mode " + str(data.operation_mode))
+    print("Proto RFU " + str(data.protoRFU))
+    print("Proto RollerTrol " + str(data.protoRollerTrol))
+    print("Proto ProGuard " + str(data.protoProGuard))
+    print("Proto FS20 " + str(data.protoFS20))
+    print("Proto LaCrosse " + str(data.protoLaCrosse))
+    print("Proto Hideki " + str(data.protoHideki))
+    print("Proto LightwaveRF " + str(data.protoLightwaveRF))
+    print("Proto Mertik " + str(data.protoMertik))
+    print("Proto Visonic " + str(data.protoVisonic))
+    print("Proto ATI " + str(data.protoATI))
+    print("Proto Oregon Scientific " + str(data.protoOregonScientific))
+    print("Proto Ikea " + str(data.protoIkea))
+    print("Proto HomeEasy " + str(data.protoHomeEasy))
+    print("Proto AC " + str(data.protoAC))
+    print("Proto ARC " + str(data.protoARC))
+    print("Proto X10 " + str(data.protoX10))
     return data
 
 
-def processTempHumSensor(msg):
+def processTempHumBaroSensor(msg, data):
     packetLength = msg[0]
+    packetType = msg[1]
     if packetLength != 10:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
-        return { 'packetType': msg[1]}
+        return data
 
-    subtype = msg[2]
-    seqNbr = msg[3]
-    id1 = msg[4]
-    id2 = msg[5]
-    temperature = accumulate(msg, 6, 2)
-    if temperature >= 32768:
-        temperature = -(temperature - 32768)
-    temperature /= float(10)
+    data["subType"] = msg[2]
+    data["seqNbr"] = msg[3]
+    data["id1"] = msg[4]
+    data["id2"] = msg[5]
 
-    humidity = msg[8]
-    humidityStatus = msg[9]
-    battery = (msg[10] & 0xF0) >> 4
-    rssi = msg[10] & 0x0F
+    position = 6
+    if packetType in [80,82,84]:
+        temperature = accumulate(msg, position, 2)
+        if temperature >= 32768:
+            temperature = -(temperature - 32768)
+        temperature /= float(10)
+        data["temperature"] = temperature
+        print("Temperature " + str(data.temperature) +"C")
+        position += 2
 
-    print("Temperature " + str(temperature) +"C")
-    print("Humidity " + str(humidity) +"%")
-    print("Humidity status " + str(humidityStatus))
-    print("Battery " + str(battery))
-    print("RSSI " + str(rssi))
-    return {'packetLength': packetLength, 'packetType': msg[1], \
-            'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'temperature': temperature,   \
-            'humidity': humidity, 'humidityStatus': humidityStatus, 'battery': battery, 'RSSI': rssi}
+    if packetType in [81,82,84]:
+        data["humidity"] = msg[position]
+        data["humidityStatus"] = msg[position+1]
+        print("Humidity " + str(data.humidity) +"%")
+        print("Humidity status " + str(data.humidityStatus))
+        position += 2
 
-def processEnergyUsageSensor(msg):
+    if packetType in [83,84]:
+        data["baro"] = accumulate(msg, position, 2)
+        data["forecast"] = msg[position+2]
+        print("Barometre " + str(data.baro) + "hPa")
+        print("Forecast " + str(data.forecast))
+        position += 3
+
+    data["battery"] = (msg[position] & 0xF0) >> 4
+    data["RSSI"] = msg[position] & 0x0F
+    print("Battery " + str(data.battery))
+    print("RSSI " + str(data.rssi))
+    return data
+
+def processEnergyUsageSensor(msg, data):
     packetLength = msg[0]
     if packetLength != 17:
         print("Message with invalid length, got " + str(packetLength) + " expected 17")
-        return { 'packetType': msg[1]}
+        return data
 
-    subtype = msg[2]
-    seqNbr = msg[3]
-    id1 = msg[4]
-    id2 = msg[5]
-    count = msg[6]
-    instant = accumulate(msg, 7,4)
-    total = accumulate(msg, 11,6) / float(223666) # To get kWh cf doc from rfxcom
-    battery = (msg[17] & 0xF0) >> 4
-    rssi = msg[17] & 0x0F
+    data["subType"] = msg[2]
+    data["seqNbr"] = msg[3]
+    data["id1"] = msg[4]
+    data["id2"] = msg[5]
+    data["count"] = msg[6]
+    data["instant"] = accumulate(msg, 7,4)
+    data["total"] = float(accumulate(msg, 11,6)) / float(223666) # To get kWh cf doc from rfxcom
+    data["battery"] = (msg[17] & 0xF0) >> 4
+    data["RSSI"] = msg[17] & 0x0F
 
-    print("Instant power " + str(instant))
-    print("Total power " + str(total))
-    print("Battery " + str(battery))
-    print("RSSI " + str(rssi))
-    return {'packetLength': packetLength, 'packetType': msg[1],\
-            'subType': subtype, 'seqNbr': seqNbr, 'id1': id1, 'id2': id2, 'count':count, 'instant': instant, \
-            'total': total, 'battery': battery, 'RSSI': rssi}
+    print("Instant power " + str(data.instant))
+    print("Total power " + str(data.total))
+    print("Battery " + str(data.battery))
+    print("RSSI " + str(data.rssi))
+    return data
 
 def parseMessage(msg):
     print('Packet length ' + str(msg[0]))
+    packetLength = msg[0]
     packetType = msg[1]
 
-    data = {'packetType': packetType}
+    data = {'packetType': packetType, 'packetLength': packetLength}
 
     if packetType == 1:
         print("Received interface control (0x01) message")
-        data = processInterfaceMessage(msg)
+        data = processInterfaceMessage(msg, data)
     elif packetType == 2:
         print("Received Receiver/Transmitter (0x02) message")
     elif packetType == 3:
         print("Received undecoded RF (0x03) message")
     elif packetType == 80:
         print("Received Temperature sensor (0x50) message")
+        data = processTempHumBaroSensor(msg, data)
     elif packetType == 81:
         print("Received Humidy sensor (0x51) message")
+        data = processTempHumBaroSensor(msg, data)
     elif packetType == 82:
         print("Received Temp & Humidity sensor (0x52) message")
-        data = processTempHumSensor(msg)
+        data = processTempHumBaroSensor(msg, data)
     elif packetType == 83:
         print("Received Barometric sensor (0x53) message")
+        data = processTempHumBaroSensor(msg, data)
     elif packetType == 84:
         print("Received Temp, Hum, Baro sensor (0x54) message")
+        data = processTempHumBaroSensor(msg, data)
     elif packetType == 85:
         print("Received Rain sensor (0x55) message")
     elif packetType == 86:
@@ -166,7 +181,7 @@ def parseMessage(msg):
         print("Received UV sensor (0x57) message")
     elif packetType == 90:
         print("Received Energy usage sensor (0x5A) message")
-        data = processEnergyUsageSensor(msg)
+        data = processEnergyUsageSensor(msg, data)
     else:
         print("Unsupported packet type " + str(packetType))
     return data
