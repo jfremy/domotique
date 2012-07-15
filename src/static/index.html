@@ -64,6 +64,19 @@
 
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
+            .call(function() { this.append("header").text("Presence"); })
+            .selectAll(".horizon")
+            .data([
+        {title: "Jeff (iphone 4s)", metric: cube.metric("sum(ping().eq(alive, true).eq(host, 'iphone4s.home'))/sum(ping.eq(host, 'iphone4s.home'))")}
+    ])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+            .title(function(d) { return d.title; })
+            .metric(function(d) { return d.metric; }));
+
+    d3.select("body").insert("div", ".bottom")
+            .attr("class", "group")
             .call(function() { this.append("header").text("Temperature"); })
             .selectAll(".horizon")
             .data([
