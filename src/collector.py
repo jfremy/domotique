@@ -28,7 +28,6 @@ def accumulate(buffer, offset, nbr):
     return accu
 
 def processInterfaceMessage(msg, data):
-    data = { 'packetType': msg[1]}
     packetLength = msg[0]
     if packetLength != 13:
         print("Message with invalid length, got " + str(packetLength) + " expected 10")
@@ -81,12 +80,6 @@ def processInterfaceMessage(msg, data):
 
 
 def processTempHumBaroSensor(msg, data):
-    packetLength = msg[0]
-    packetType = msg[1]
-    if packetLength != 10:
-        print("Message with invalid length, got " + str(packetLength) + " expected 10")
-        return data
-
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
     data["id1"] = msg[4]
@@ -123,8 +116,7 @@ def processTempHumBaroSensor(msg, data):
     return data
 
 def processEnergyUsageSensor(msg, data):
-    packetLength = msg[0]
-    if packetLength != 17:
+    if data.packetLength != 17:
         print("Message with invalid length, got " + str(packetLength) + " expected 17")
         return data
 
