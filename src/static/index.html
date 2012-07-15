@@ -67,7 +67,7 @@
             .call(function() { this.append("header").text("Presence"); })
             .selectAll(".horizon")
             .data([
-        {title: "Jeff (iphone 4s)", metric: cube.metric("sum(ping().eq(alive, true).eq(host, 'iphone4s.home'))/sum(ping.eq(host, 'iphone4s.home'))")}
+        {title: "Jeff (iphone 4s)", metric: cube.metric("max(ping.eq(alive, true).eq(host, 'iphone4s.home'))")}
     ])
             .enter().append("div")
             .attr("class", "horizon")
