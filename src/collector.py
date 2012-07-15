@@ -111,7 +111,7 @@ def processTempHumBaroSensor(msg, data):
     data["battery"] = (msg[position] & 0xF0) >> 4
     data["RSSI"] = msg[position] & 0x0F
     print("Battery " + str(data["battery"]))
-    print("RSSI " + str(data["rssi"]))
+    print("RSSI " + str(data["RSSI"]))
     return data
 
 def processEnergyUsageSensor(msg, data):
@@ -132,7 +132,7 @@ def processEnergyUsageSensor(msg, data):
     print("Instant power " + str(data["instant"]))
     print("Total power " + str(data["total"]))
     print("Battery " + str(data["battery"]))
-    print("RSSI " + str(data["rssi"]))
+    print("RSSI " + str(data["RSSI"]))
     return data
 
 def parseMessage(msg):
