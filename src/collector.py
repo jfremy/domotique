@@ -28,9 +28,8 @@ def accumulate(buffer, offset, nbr):
     return accu
 
 def processInterfaceMessage(msg, data):
-    packetLength = msg[0]
-    if packetLength != 13:
-        print("Message with invalid length, got " + str(packetLength) + " expected 10")
+    if data["packetLength"] != 13:
+        print("Message with invalid length, got " + str(data["packetLength"]) + " expected 10")
         return data
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
@@ -58,24 +57,24 @@ def processInterfaceMessage(msg, data):
     data["protoARC"] = (msg5 & 0x02) != 0
     data["protoX10"] = (msg5 & 0x01) != 0
 
-    print("Firmware version " + str(data.fwVersion))
-    print("Operation mode " + str(data.operationMode))
-    print("Proto RFU " + str(data.protoRFU))
-    print("Proto RollerTrol " + str(data.protoRollerTrol))
-    print("Proto ProGuard " + str(data.protoProGuard))
-    print("Proto FS20 " + str(data.protoFS20))
-    print("Proto LaCrosse " + str(data.protoLaCrosse))
-    print("Proto Hideki " + str(data.protoHideki))
-    print("Proto LightwaveRF " + str(data.protoLightwaveRF))
-    print("Proto Mertik " + str(data.protoMertik))
-    print("Proto Visonic " + str(data.protoVisonic))
-    print("Proto ATI " + str(data.protoATI))
-    print("Proto Oregon Scientific " + str(data.protoOregonScientific))
-    print("Proto Ikea " + str(data.protoIkea))
-    print("Proto HomeEasy " + str(data.protoHomeEasy))
-    print("Proto AC " + str(data.protoAC))
-    print("Proto ARC " + str(data.protoARC))
-    print("Proto X10 " + str(data.protoX10))
+    print("Firmware version " + str(data["fwVersion"]))
+    print("Operation mode " + str(data["operationMode"]))
+    print("Proto RFU " + str(data["protoRFU"]))
+    print("Proto RollerTrol " + str(data["protoRollerTrol"]))
+    print("Proto ProGuard " + str(data["protoProGuard"]))
+    print("Proto FS20 " + str(data["protoFS20"]))
+    print("Proto LaCrosse " + str(data["protoLaCrosse"]))
+    print("Proto Hideki " + str(data["protoHideki"]))
+    print("Proto LightwaveRF " + str(data["protoLightwaveRF"]))
+    print("Proto Mertik " + str(data["protoMertik"]))
+    print("Proto Visonic " + str(data["protoVisonic"]))
+    print("Proto ATI " + str(data["protoATI"]))
+    print("Proto Oregon Scientific " + str(data["protoOregonScientific"]))
+    print("Proto Ikea " + str(data["protoIkea"]))
+    print("Proto HomeEasy " + str(data["protoHomeEasy"]))
+    print("Proto AC " + str(data["protoAC"]))
+    print("Proto ARC " + str(data["protoARC"]))
+    print("Proto X10 " + str(data["protoX10"]))
     return data
 
 
@@ -92,32 +91,32 @@ def processTempHumBaroSensor(msg, data):
             temperature = -(temperature - 32768)
         temperature /= float(10)
         data["temperature"] = temperature
-        print("Temperature " + str(data.temperature) +"C")
+        print("Temperature " + str(data["temperature"]) +"C")
         position += 2
 
     if packetType in [81,82,84]:
         data["humidity"] = msg[position]
         data["humidityStatus"] = msg[position+1]
-        print("Humidity " + str(data.humidity) +"%")
-        print("Humidity status " + str(data.humidityStatus))
+        print("Humidity " + str(data["humidity"]) +"%")
+        print("Humidity status " + str(data["humidityStatus"]))
         position += 2
 
     if packetType in [83,84]:
         data["baro"] = accumulate(msg, position, 2)
         data["forecast"] = msg[position+2]
-        print("Barometre " + str(data.baro) + "hPa")
-        print("Forecast " + str(data.forecast))
+        print("Barometre " + str(data["baro"]) + "hPa")
+        print("Forecast " + str(data["forecast"]))
         position += 3
 
     data["battery"] = (msg[position] & 0xF0) >> 4
     data["RSSI"] = msg[position] & 0x0F
-    print("Battery " + str(data.battery))
-    print("RSSI " + str(data.rssi))
+    print("Battery " + str(data["battery"]))
+    print("RSSI " + str(data["rssi"]))
     return data
 
 def processEnergyUsageSensor(msg, data):
-    if data.packetLength != 17:
-        print("Message with invalid length, got " + str(packetLength) + " expected 17")
+    if data["packetLength"] != 17:
+        print("Message with invalid length, got " + str(data["packetLength"]) + " expected 17")
         return data
 
     data["subType"] = msg[2]
@@ -130,10 +129,10 @@ def processEnergyUsageSensor(msg, data):
     data["battery"] = (msg[17] & 0xF0) >> 4
     data["RSSI"] = msg[17] & 0x0F
 
-    print("Instant power " + str(data.instant))
-    print("Total power " + str(data.total))
-    print("Battery " + str(data.battery))
-    print("RSSI " + str(data.rssi))
+    print("Instant power " + str(data["instant"]))
+    print("Total power " + str(data["total"]))
+    print("Battery " + str(data["battery"]))
+    print("RSSI " + str(data["rssi"]))
     return data
 
 def parseMessage(msg):
