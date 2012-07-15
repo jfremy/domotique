@@ -85,7 +85,7 @@ def processTempHumBaroSensor(msg, data):
     data["id2"] = msg[5]
 
     position = 6
-    if packetType in [80,82,84]:
+    if data["packetType"] in [80,82,84]:
         temperature = accumulate(msg, position, 2)
         if temperature >= 32768:
             temperature = -(temperature - 32768)
@@ -94,14 +94,14 @@ def processTempHumBaroSensor(msg, data):
         print("Temperature " + str(data["temperature"]) +"C")
         position += 2
 
-    if packetType in [81,82,84]:
+    if data["packetType"] in [81,82,84]:
         data["humidity"] = msg[position]
         data["humidityStatus"] = msg[position+1]
         print("Humidity " + str(data["humidity"]) +"%")
         print("Humidity status " + str(data["humidityStatus"]))
         position += 2
 
-    if packetType in [83,84]:
+    if data["packetType"] in [83,84]:
         data["baro"] = accumulate(msg, position, 2)
         data["forecast"] = msg[position+2]
         print("Barometre " + str(data["baro"]) + "hPa")
