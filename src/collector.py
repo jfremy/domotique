@@ -58,8 +58,8 @@ def processInterfaceMessage(msg, data):
     data["protoARC"] = (msg5 & 0x02) != 0
     data["protoX10"] = (msg5 & 0x01) != 0
 
-    print("Firmware version " + str(data.fw_version))
-    print("Operation mode " + str(data.operation_mode))
+    print("Firmware version " + str(data.fwVersion))
+    print("Operation mode " + str(data.operationMode))
     print("Proto RFU " + str(data.protoRFU))
     print("Proto RollerTrol " + str(data.protoRollerTrol))
     print("Proto ProGuard " + str(data.protoProGuard))
