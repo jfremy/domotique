@@ -36,8 +36,8 @@ def processInterfaceMessage(msg, data):
     data["seqNbr"] = msg[3]
 
     data["deviceType"] = msg[5]
-    data["fw_version"] = msg[6]
-    data["operation_mode"] = msg[7]
+    data["fwVersion"] = msg[6]
+    data["operationMode"] = msg[7]
     msg4 = msg[8]
     msg5 = msg[9]
 
