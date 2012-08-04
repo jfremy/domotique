@@ -135,6 +135,27 @@ def processEnergyUsageSensor(msg, data):
     print("RSSI " + str(data["RSSI"]))
     return data
 
+def processLighting2Sensor(msg, data):
+    if data["packetLength"] != 11:
+        print("Message with invalid length, got " + str(data["packetLength"]) + " expected 11")
+        return data
+
+    data["subType"] = msg[2]
+    data["seqNbr"] = msg[3]
+    id = accumulate(msg, 4, 4) & 0x03FFFFFF
+    data["id"] = id
+    data["unitCode"] = msg[8]
+    data["command"] = msg[9]
+    data["level"] = msg[10]
+    data["RSSI"] = msg[11] & 0x0F
+
+    print("ID " + str(data["id"]))
+    print("Unit code " + str(data["unitCode"]))
+    print("Command " + str(data["command"]))
+    print("Level " + str(data["level"]))
+    print("RSSI " + str(data["RSSI"]))
+    return data
+
 def parseMessage(msg):
     print('Packet length ' + str(msg[0]))
     packetLength = msg[0]
@@ -149,6 +170,9 @@ def parseMessage(msg):
         print("Received Receiver/Transmitter (0x02) message")
     elif packetType == 3:
         print("Received undecoded RF (0x03) message")
+    elif packetType == 17:
+        print("Received Lighting2 (0x11) message")
+        data = processLighting2Sensor(msg, data)
     elif packetType == 80:
         print("Received Temperature sensor (0x50) message")
         data = processTempHumBaroSensor(msg, data)
@@ -182,7 +206,7 @@ def sendData(data, url):
         params = json.dumps([{'type': 'rfxcom' + str(data['packetType']),'time': now(), 'data': data}])
         headers = {'Content-Type': 'application/json'}
         req = urllib.request.Request(url, params.encode('utf-8'), headers)
-        result = urllib.request.urlopen(req)
+        urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
 
