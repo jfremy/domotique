@@ -30,7 +30,7 @@
     // Assumption is that the cube evaluator is on the same host, port - 1, same protocol
     var protocol = location.protocol;
     var hostname = location.hostname;
-    var port = Number(location.port || 80)-1;
+    var port = 25000;
 
 
     var cube = context.cube(protocol + "//" + hostname + ":" + port);
@@ -51,7 +51,7 @@
     //
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
-            .call(function() { this.append("header").text("Power consumption"); })
+            .call(function() { this.append("header").text("Consommation électrique"); })
             .selectAll(".horizon")
             .data([
         {title: "Appart (W)", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
@@ -64,10 +64,11 @@
 
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
-            .call(function() { this.append("header").text("Presence"); })
+            .call(function() { this.append("header").text("Porte d'entrée"); })
             .selectAll(".horizon")
             .data([
-        {title: "Jeff (iphone 4s)", metric: cube.metric("max(ping.eq(alive, true).eq(host, 'iphone4s.home'))")}
+        {title: "Ouverture", metric: cube.metric("sum(rfxcom17.eq(id, 652960).eq(command, 1))")},
+        {title: "Fermeture", metric: cube.metric("sum(rfxcom17.eq(id, 652960).eq(command, 0))")}
     ])
             .enter().append("div")
             .attr("class", "horizon")
@@ -75,12 +76,13 @@
             .title(function(d) { return d.title; })
             .metric(function(d) { return d.metric; }));
 
+
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
-            .call(function() { this.append("header").text("Temperature"); })
+            .call(function() { this.append("header").text("Température"); })
             .selectAll(".horizon")
             .data([
-        {title: "Exterieur (°C)", metric: cube.metric("sum(rfxcom80(temperature))/sum(rfxcom80)")},
+        {title: "Extérieur (°C)", metric: cube.metric("sum(rfxcom80(temperature))/sum(rfxcom80)")},
         {title: "Salon (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
         {title: "Bureau (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
         {title: "Chambre (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
