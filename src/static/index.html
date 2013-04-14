@@ -16,7 +16,7 @@
     <option value="36e5">1 hour</option>
     <option value="864e5">1 day</option>
 </select>
-<script src="js/d3.v2.js" type='text/javascript'></script>
+<script src="js/d3.v3.js" type='text/javascript'></script>
 <script src="js/cubism.v1.js" type='text/javascript'></script>
 <script type='text/javascript'>
 
@@ -54,27 +54,43 @@
             .call(function() { this.append("header").text("Consommation électrique"); })
             .selectAll(".horizon")
             .data([
-        {title: "Appart (W)", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
-    ])
+                {title: "Appart (W)", metric: cube.metric("sum(rfxcom90(instant))/sum(rfxcom90)")}
+            ])
             .enter().append("div")
             .attr("class", "horizon")
             .call(context.horizon()
-            .title(function(d) { return d.title; })
-            .metric(function(d) { return d.metric; }));
+                    .title(function(d) { return d.title; })
+                    .metric(function(d) { return d.metric; }));
 
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
             .call(function() { this.append("header").text("Porte d'entrée"); })
             .selectAll(".horizon")
             .data([
-        {title: "Ouverture", metric: cube.metric("sum(rfxcom17.eq(id, 652960).eq(command, 1))")},
-        {title: "Fermeture", metric: cube.metric("sum(rfxcom17.eq(id, 652960).eq(command, 0))")}
-    ])
+                {title: "Ouverture", metric: cube.metric("sum(rfxcom17.eq(command, 1))")},
+                {title: "Fermeture", metric: cube.metric("sum(rfxcom17.eq(command, 0))")}
+            ])
             .enter().append("div")
             .attr("class", "horizon")
             .call(context.horizon()
-            .title(function(d) { return d.title; })
-            .metric(function(d) { return d.metric; }));
+                    .title(function(d) { return d.title; })
+                    .metric(function(d) { return d.metric; }));
+
+
+    d3.select("body").insert("div", ".bottom")
+            .attr("class", "group")
+            .call(function() { this.append("header").text("Temps"); })
+            .selectAll(".horizon")
+            .data([
+                {title: "Pression (hPa)", metric: cube.metric("sum(rfxcom84(baro))/sum(rfxcom84)")},
+                {title: "Prévision", metric: cube.metric("sum(rfxcom84(forecast))/sum(rfxcom84)")}
+            ])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+                    .title(function(d) { return d.title; })
+                    .extent(function(d,i) { return i == 0 ? [980, 1050] : [1, 4] })
+                    .metric(function(d) { return d.metric; }));
 
 
     d3.select("body").insert("div", ".bottom")
@@ -82,31 +98,34 @@
             .call(function() { this.append("header").text("Température"); })
             .selectAll(".horizon")
             .data([
-        {title: "Extérieur (°C)", metric: cube.metric("sum(rfxcom80(temperature))/sum(rfxcom80)")},
-        {title: "Salon (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
-        {title: "Bureau (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
-        {title: "Chambre (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
-    ])
+                {title: "Extérieur (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id1, 179))/sum(rfxcom82.eq(id1, 179))")},
+                {title: "Salon (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id1, 21))/sum(rfxcom82.eq(id1, 21))")},
+                {title: "Bureau (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id1, 87))/sum(rfxcom82.eq(id1, 87))")},
+                {title: "Chambre (°C)", metric: cube.metric("sum(rfxcom82(temperature).eq(id1, 201))/sum(rfxcom82.eq(id1, 201))")},
+                {title: "SdB (°C)", metric: cube.metric("sum(rfxcom84(temperature).eq(id2, 0))/sum(rfxcom84.eq(id2, 0))")}
+            ])
             .enter().append("div")
             .attr("class", "horizon")
             .call(context.horizon()
-            .title(function(d) { return d.title; })
-            .metric(function(d) { return d.metric; }));
+                    .title(function(d) { return d.title; })
+                    .metric(function(d) { return d.metric; }));
 
     d3.select("body").insert("div", ".bottom")
             .attr("class", "group")
             .call(function() { this.append("header").text("Humidity"); })
             .selectAll(".horizon")
             .data([
-        {title: "Salon (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 1))/sum(rfxcom82.eq(id2, 1))")},
-        {title: "Bureau (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 2))/sum(rfxcom82.eq(id2, 2))")},
-        {title: "Chambre (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id2, 4))/sum(rfxcom82.eq(id2, 4))")}
-    ])
+                {title: "Extérieur (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id1, 179))/sum(rfxcom82.eq(id1, 179))")},
+                {title: "Salon (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id1, 21))/sum(rfxcom82.eq(id1, 21))")},
+                {title: "Bureau (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id1, 87))/sum(rfxcom82.eq(id1, 87))")},
+                {title: "Chambre (%)", metric: cube.metric("sum(rfxcom82(humidity).eq(id1, 201))/sum(rfxcom82.eq(id1, 201))")},
+                {title: "SdB (%)", metric: cube.metric("sum(rfxcom84(humidity).eq(id2, 0))/sum(rfxcom84.eq(id2, 0))")},
+            ])
             .enter().append("div")
             .attr("class", "horizon")
             .call(context.horizon()
-            .title(function(d) { return d.title; })
-            .metric(function(d) { return d.metric; }));
+                    .title(function(d) { return d.title; })
+                    .metric(function(d) { return d.metric; }));
 
 
     // On mousemove, reposition the chart values to match the rule.

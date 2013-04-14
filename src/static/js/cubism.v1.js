@@ -1,5 +1,5 @@
 (function(exports){
-var cubism = exports.cubism = {version: "1.2.1"};
+var cubism = exports.cubism = {version: "1.3.0"};
 var cubism_id = 0;
 function cubism_identity(d) { return d; }
 cubism.option = function(name, defaultValue) {
@@ -198,7 +198,7 @@ cubism_contextPrototype.graphite = function(host) {
 
       // Apply the summarize, if necessary.
       if (step !== 1e4) target = "summarize(" + target + ",'"
-          + (!(step % 36e5) ? step / 36e5 + "hour" : !(step % 6e4) ? step / 6e4 + "min" : step + "sec")
+          + (!(step % 36e5) ? step / 36e5 + "hour" : !(step % 6e4) ? step / 6e4 + "min" : step / 1e3 + "sec")
           + "','" + sum + "')";
 
       d3.text(host + "/render?format=raw"
@@ -254,6 +254,99 @@ function cubism_graphiteParse(text) {
       .slice(1) // the first value is always None?
       .map(function(d) { return +d; });
 }
+cubism_contextPrototype.gangliaWeb = function(config) {
+  var host = '',
+      uriPathPrefix = '/ganglia2/';
+ 
+  if (arguments.length) {
+    if (config.host) {
+      host = config.host;
+    }
+
+    if (config.uriPathPrefix) {
+      uriPathPrefix = config.uriPathPrefix;
+
+      /* Add leading and trailing slashes, as appropriate. */
+      if( uriPathPrefix[0] != '/' ) {
+        uriPathPrefix = '/' + uriPathPrefix;
+      }
+
+      if( uriPathPrefix[uriPathPrefix.length - 1] != '/' ) {
+        uriPathPrefix += '/';
+      }
+    }
+  }
+
+  var source = {},
+      context = this;
+
+  source.metric = function(metricInfo) {
+
+    /* Store the members from metricInfo into local variables. */
+    var clusterName = metricInfo.clusterName, 
+        metricName = metricInfo.metricName, 
+        hostName = metricInfo.hostName,
+        isReport = metricInfo.isReport || false,
+        titleGenerator = metricInfo.titleGenerator ||
+          /* Reasonable (not necessarily pretty) default for titleGenerator. */
+          function(unusedMetricInfo) {
+            /* unusedMetricInfo is, well, unused in this default case. */
+            return ('clusterName:' + clusterName + 
+                    ' metricName:' + metricName +
+                    (hostName ? ' hostName:' + hostName : ''));
+          },
+        onChangeCallback = metricInfo.onChangeCallback;
+    
+    /* Default to plain, simple metrics. */
+    var metricKeyName = isReport ? 'g' : 'm';
+
+    var gangliaWebMetric = context.metric(function(start, stop, step, callback) {
+
+      function constructGangliaWebRequestQueryParams() {
+        return ('c=' + clusterName +
+                '&' + metricKeyName + '=' + metricName + 
+                (hostName ? '&h=' + hostName : '') + 
+                '&cs=' + start/1000 + '&ce=' + stop/1000 + '&step=' + step/1000 + '&graphlot=1');
+      }
+
+      d3.json(host + uriPathPrefix + 'graph.php?' + constructGangliaWebRequestQueryParams(),
+        function(result) {
+          if( !result ) {
+            return callback(new Error("Unable to fetch GangliaWeb data"));
+          }
+
+          callback(null, result[0].data);
+        });
+
+    }, titleGenerator(metricInfo));
+
+    gangliaWebMetric.toString = function() {
+      return titleGenerator(metricInfo);
+    };
+
+    /* Allow users to run their custom code each time a gangliaWebMetric changes.
+     *
+     * TODO Consider abstracting away the naked Cubism call, and instead exposing 
+     * a callback that takes in the values array (maybe alongwith the original
+     * start and stop 'naked' parameters), since it's handy to have the entire
+     * dataset at your disposal (and users will likely implement onChangeCallback
+     * primarily to get at this dataset).
+     */
+    if (onChangeCallback) {
+      gangliaWebMetric.on('change', onChangeCallback);
+    }
+
+    return gangliaWebMetric;
+  };
+
+  // Returns the gangliaWeb host + uriPathPrefix.
+  source.toString = function() {
+    return host + uriPathPrefix;
+  };
+
+  return source;
+};
+
 function cubism_metric(context) {
   if (!(context instanceof cubism_context)) throw new Error("invalid context");
   this.context = context;
@@ -547,6 +640,7 @@ cubism_contextPrototype.horizon = function() {
           for (var i = i0, n = width, y1; i < n; ++i) {
             y1 = metric_.valueAt(i);
             if (y1 <= 0) { negative = true; continue; }
+            if (y1 === undefined) continue;
             canvas.fillRect(i, y1 = scale(y1), 1, y0 - y1);
           }
         }
