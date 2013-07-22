@@ -81,7 +81,7 @@ def processInterfaceMessage(msg, data):
 def processTempHumBaroSensor(msg, data):
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id"] = msg[4] << 8 + msg[5]
+    data["id"] = accumulate(msg, 4, 2)
     print("ID " + str(data["id"]))
 
     position = 6
@@ -121,7 +121,7 @@ def processEnergyUsageSensor(msg, data):
 
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id"] = msg[4] << 8 + msg[5]
+    data["id"] = accumulate(msg, 4, 2)
     print("ID " + str(data["id"]))
     data["count"] = msg[6]
     data["instant"] = accumulate(msg, 7,4)
