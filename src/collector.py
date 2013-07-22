@@ -81,8 +81,8 @@ def processInterfaceMessage(msg, data):
 def processTempHumBaroSensor(msg, data):
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id1"] = msg[4]
-    data["id2"] = msg[5]
+    data["id"] = msg[4] << 8 + msg[5]
+    print("ID " + str(data["id"]))
 
     position = 6
     if data["packetType"] in [80,82,84]:
@@ -102,9 +102,9 @@ def processTempHumBaroSensor(msg, data):
         position += 2
 
     if data["packetType"] in [83,84]:
-        data["baro"] = accumulate(msg, position, 2)
+        data["baro"] = accumulate(msg, position, 2) / 1000
         data["forecast"] = msg[position+2]
-        print("Barometre " + str(data["baro"]) + "hPa")
+        print("Barometre " + str(data["baro"]) + "bar")
         print("Forecast " + str(data["forecast"]))
         position += 3
 
@@ -121,8 +121,8 @@ def processEnergyUsageSensor(msg, data):
 
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id1"] = msg[4]
-    data["id2"] = msg[5]
+    data["id"] = msg[4] << 8 + msg[5]
+    print("ID " + str(data["id"]))
     data["count"] = msg[6]
     data["instant"] = accumulate(msg, 7,4)
     data["total"] = float(accumulate(msg, 11,6)) / float(223666) # To get kWh cf doc from rfxcom
@@ -144,6 +144,7 @@ def processLighting2Sensor(msg, data):
     data["seqNbr"] = msg[3]
     id = accumulate(msg, 4, 4) & 0x03FFFFFF
     data["id"] = id
+    print("ID " + str(data["id"]))
     data["unitCode"] = msg[8]
     data["command"] = msg[9]
     data["level"] = msg[10]
@@ -201,10 +202,58 @@ def parseMessage(msg):
         print("Unsupported packet type " + str(packetType))
     return data
 
-def sendData(data, url):
+# 54016: sdb
+# 45825: exterior
+# 51460: chambre
+# 22274: bureau
+# 5377 : salon
+# 34546: conso
+
+def sendData(data, url, key):
+
+    feeds = {
+        54016: {
+            "temperature": 38350,
+            "humidity": 38355,
+            "baro": 38346
+        },
+        45825: {
+            "temperature": 38351,
+            "humidity": 38356
+        },
+        51460: {
+            "temperature": 38349,
+            "humidity": 38354
+        },
+        22274: {
+            "temperature": 38348,
+            "humidity": 38353
+        },
+        5377: {
+            "temperature": 38347,
+            "humidity": 38352
+        },
+        34546: {
+            "instant": 38345
+        }
+    }
     try:
-        params = json.dumps([{'type': 'rfxcom' + str(data['packetType']),'time': now(), 'data': data}])
-        headers = {'Content-Type': 'application/json'}
+        array = []
+        id = data["id"]
+
+        #Do we have this id in our list?
+        if id in feeds:
+            #Iterate over the data element we have a feed for
+            for i in feeds[id]:
+                #Do we have data for the feed?
+                if i in data:
+                    #Append to the array
+                    array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
+
+
+        params = json.dumps(array)
+        print("JSON " + str(params))
+        headers = {'Content-Type': 'application/json', 'sense_key': key}
         req = urllib.request.Request(url, params.encode('utf-8'), headers)
         urllib.request.urlopen(req)
     except urllib.error.URLError as err:
@@ -216,7 +265,8 @@ def main():
     global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
-    parser.add_argument("-u", "--url", dest="url", help = "post data to URL", metavar="URL", required=True)
+    parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", required=True, argument_default="http://api.sen.se")
+    parser.add_argument("-k", "--key", dest="key", help = "sen.se key", metavar="URL", required=True)
 
     args = parser.parse_args()
 
@@ -250,7 +300,7 @@ def main():
                     msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
                     del buffer[0:packetLength+1] #remove message
                     data = parseMessage(msg)
-                    sendData(data, args.url)
+                    sendData(data, args.url, args.key)
 
 
 
