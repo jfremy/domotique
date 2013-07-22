@@ -252,11 +252,11 @@ def sendData(data, url, key):
                         array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
 
 
-            params = json.dumps(array)
-            print("JSON " + str(params))
-            headers = {'Content-Type': 'application/json', 'sense_key': key}
-            req = urllib.request.Request(url, params.encode('utf-8'), headers)
-            urllib.request.urlopen(req)
+                params = json.dumps(array)
+                print("JSON " + str(params))
+                headers = {'Content-Type': 'application/json', 'sense_key': key}
+                req = urllib.request.Request(url, params.encode('utf-8'), headers)
+                urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
 
