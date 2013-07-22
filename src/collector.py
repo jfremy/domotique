@@ -269,7 +269,7 @@ def main():
     #parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", argument_default="http://api.sen.se")
     parser.add_argument("-k", "--key", dest="key", help = "sen.se key", metavar="URL", required=True)
 
-    url = "http://api.sen.se"
+    url = "http://api.sen.se/events/"
 
     args = parser.parse_args()
 
