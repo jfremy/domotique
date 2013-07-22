@@ -265,8 +265,10 @@ def main():
     global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
-    parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", required=True, argument_default="http://api.sen.se")
+    #parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", argument_default="http://api.sen.se")
     parser.add_argument("-k", "--key", dest="key", help = "sen.se key", metavar="URL", required=True)
+
+    url = "http://api.sen.se"
 
     args = parser.parse_args()
 
@@ -300,7 +302,7 @@ def main():
                     msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
                     del buffer[0:packetLength+1] #remove message
                     data = parseMessage(msg)
-                    sendData(data, args.url, args.key)
+                    sendData(data, url, args.key)
 
 
 
