@@ -239,23 +239,24 @@ def sendData(data, url, key):
     }
     try:
         array = []
-        id = data["id"]
+        if "id" in data:
+            id = data["id"]
 
-        #Do we have this id in our list?
-        if id in feeds:
-            #Iterate over the data element we have a feed for
-            for i in feeds[id]:
-                #Do we have data for the feed?
-                if i in data:
-                    #Append to the array
-                    array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
+            #Do we have this id in our list?
+            if id in feeds:
+                #Iterate over the data element we have a feed for
+                for i in feeds[id]:
+                    #Do we have data for the feed?
+                    if i in data:
+                        #Append to the array
+                        array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
 
 
-        params = json.dumps(array)
-        print("JSON " + str(params))
-        headers = {'Content-Type': 'application/json', 'sense_key': key}
-        req = urllib.request.Request(url, params.encode('utf-8'), headers)
-        urllib.request.urlopen(req)
+            params = json.dumps(array)
+            print("JSON " + str(params))
+            headers = {'Content-Type': 'application/json', 'sense_key': key}
+            req = urllib.request.Request(url, params.encode('utf-8'), headers)
+            urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
 
