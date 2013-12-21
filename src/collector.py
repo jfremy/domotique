@@ -259,7 +259,8 @@ def sendData(data, url, key):
                 urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
-
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
     return
 
 def main():
