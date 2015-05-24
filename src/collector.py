@@ -84,8 +84,8 @@ def processinterfacemessage(msg, data):
 def processtemphumbarosensor(msg, data):
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id"] = accumulate(msg, 4, 2)
-    print("ID " + str(data["id"]))
+    data["sensorid"] = accumulate(msg, 4, 2)
+    print("ID " + str(data["sensorid"]))
 
     position = 6
     if data["packetType"] in [80, 82, 84]:
@@ -125,8 +125,8 @@ def processenergyusagesensor(msg, data):
 
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
-    data["id"] = accumulate(msg, 4, 2)
-    print("ID " + str(data["id"]))
+    data["sensorid"] = accumulate(msg, 4, 2)
+    print("ID " + str(data["sensorid"]))
     data["count"] = msg[6]
     data["instant"] = accumulate(msg, 7, 4)
     data["total"] = float(accumulate(msg, 11, 6)) / float(223666)  # To get kWh cf doc from rfxcom
@@ -148,14 +148,14 @@ def processlighting2sensor(msg, data):
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
     id = accumulate(msg, 4, 4) & 0x03FFFFFF
-    data["id"] = id
-    print("ID " + str(data["id"]))
+    data["sensorid"] = id
+    print("ID " + str(data["sensorid"]))
     data["unitCode"] = msg[8]
     data["command"] = msg[9]
     data["level"] = msg[10]
     data["RSSI"] = msg[11] & 0x0F
 
-    print("ID " + str(data["id"]))
+    print("ID " + str(data["sensorid"]))
     print("Unit code " + str(data["unitCode"]))
     print("Command " + str(data["command"]))
     print("Level " + str(data["level"]))
@@ -164,6 +164,7 @@ def processlighting2sensor(msg, data):
 
 
 def parsemessage(msg):
+    sendpacket = False
     print('Packet length ' + str(msg[0]))
     packetlength = msg[0]
     packettype = msg[1]
@@ -183,18 +184,23 @@ def parsemessage(msg):
     elif packettype == 80:
         print("Received Temperature sensor (0x50) message")
         data = processtemphumbarosensor(msg, data)
+        sendpacket = True
     elif packettype == 81:
         print("Received Humidy sensor (0x51) message")
         data = processtemphumbarosensor(msg, data)
+        sendpacket = True
     elif packettype == 82:
         print("Received Temp & Humidity sensor (0x52) message")
         data = processtemphumbarosensor(msg, data)
+        sendpacket = True
     elif packettype == 83:
         print("Received Barometric sensor (0x53) message")
         data = processtemphumbarosensor(msg, data)
+        sendpacket = True
     elif packettype == 84:
         print("Received Temp, Hum, Baro sensor (0x54) message")
         data = processtemphumbarosensor(msg, data)
+        sendpacket = True
     elif packettype == 85:
         print("Received Rain sensor (0x55) message")
     elif packettype == 86:
@@ -204,9 +210,10 @@ def parsemessage(msg):
     elif packettype == 90:
         print("Received Energy usage sensor (0x5A) message")
         data = processenergyusagesensor(msg, data)
+        sendpacket = True
     else:
         print("Unsupported packet type " + str(packettype))
-    return data
+    return sendpacket, data
 
 
 def senddata(data, url, appid, key):
@@ -269,8 +276,9 @@ def main():
                     msg = buffer[0:packetlength+1]
                     # remove message
                     del buffer[0:packetlength+1]
-                    data = parsemessage(msg)
-                    senddata(data, url, args.appid, args.key)
+                    sendpacket, data = parsemessage(msg)
+                    if sendpacket == True:
+                        senddata(data, url, args.appid, args.key)
 
 
 if __name__ == "__main__":
