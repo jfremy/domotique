@@ -234,7 +234,7 @@ def main():
     parser.add_argument("-k", "--key", dest="key", help="Parse REST API Key", metavar="Key", required=True)
     parser.add_argument("-a", "--app", dest="appid", help="Parse Application ID", metavar="ID", required=True)
 
-    url = "https://api.parse.com/classes/environment"
+    url = "https://api.parse.com/1/classes/environment"
 
     args = parser.parse_args()
 
