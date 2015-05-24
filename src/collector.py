@@ -1,7 +1,6 @@
 __author__ = 'Jeff'
 
 import serial
-import io
 import time
 import signal
 import sys
@@ -24,11 +23,11 @@ def now():
 
 def accumulate(buffer, offset, nbr):
     accu = 0
-    for i in range(0,nbr):
+    for i in range(0, nbr):
         accu = accu*256 + buffer[offset + i]
     return accu
 
-def processInterfaceMessage(msg, data):
+def processinterfacemessage(msg, data):
     if data["packetLength"] != 13:
         print("Message with invalid length, got " + str(data["packetLength"]) + " expected 10")
         return data
@@ -79,14 +78,14 @@ def processInterfaceMessage(msg, data):
     return data
 
 
-def processTempHumBaroSensor(msg, data):
+def processtemphumbarosensor(msg, data):
     data["subType"] = msg[2]
     data["seqNbr"] = msg[3]
     data["id"] = accumulate(msg, 4, 2)
     print("ID " + str(data["id"]))
 
     position = 6
-    if data["packetType"] in [80,82,84]:
+    if data["packetType"] in [80, 82, 84]:
         temperature = accumulate(msg, position, 2)
         if temperature >= 32768:
             temperature = -(temperature - 32768)
@@ -95,14 +94,14 @@ def processTempHumBaroSensor(msg, data):
         print("Temperature " + str(data["temperature"]) +"C")
         position += 2
 
-    if data["packetType"] in [81,82,84]:
+    if data["packetType"] in [81, 82, 84]:
         data["humidity"] = msg[position]
         data["humidityStatus"] = msg[position+1]
         print("Humidity " + str(data["humidity"]) +"%")
         print("Humidity status " + str(data["humidityStatus"]))
         position += 2
 
-    if data["packetType"] in [83,84]:
+    if data["packetType"] in [83, 84]:
         data["baro"] = accumulate(msg, position, 2) / 1000
         data["forecast"] = msg[position+2]
         print("Barometre " + str(data["baro"]) + "bar")
@@ -115,7 +114,7 @@ def processTempHumBaroSensor(msg, data):
     print("RSSI " + str(data["RSSI"]))
     return data
 
-def processEnergyUsageSensor(msg, data):
+def processenergyusagesensor(msg, data):
     if data["packetLength"] != 17:
         print("Message with invalid length, got " + str(data["packetLength"]) + " expected 17")
         return data
@@ -125,8 +124,8 @@ def processEnergyUsageSensor(msg, data):
     data["id"] = accumulate(msg, 4, 2)
     print("ID " + str(data["id"]))
     data["count"] = msg[6]
-    data["instant"] = accumulate(msg, 7,4)
-    data["total"] = float(accumulate(msg, 11,6)) / float(223666) # To get kWh cf doc from rfxcom
+    data["instant"] = accumulate(msg, 7, 4)
+    data["total"] = float(accumulate(msg, 11, 6)) / float(223666) # To get kWh cf doc from rfxcom
     data["battery"] = (msg[17] & 0xF0) >> 4
     data["RSSI"] = msg[17] & 0x0F
 
@@ -136,7 +135,7 @@ def processEnergyUsageSensor(msg, data):
     print("RSSI " + str(data["RSSI"]))
     return data
 
-def processLighting2Sensor(msg, data):
+def processlighting2sensor(msg, data):
     if data["packetLength"] != 11:
         print("Message with invalid length, got " + str(data["packetLength"]) + " expected 11")
         return data
@@ -158,49 +157,49 @@ def processLighting2Sensor(msg, data):
     print("RSSI " + str(data["RSSI"]))
     return data
 
-def parseMessage(msg):
+def parsemessage(msg):
     print('Packet length ' + str(msg[0]))
-    packetLength = msg[0]
-    packetType = msg[1]
+    packetlength = msg[0]
+    packettype = msg[1]
 
-    data = {'packetType': packetType, 'packetLength': packetLength}
+    data = {'packetType': packettype, 'packetLength': packetlength}
 
-    if packetType == 1:
+    if packettype == 1:
         print("Received interface control (0x01) message")
-        data = processInterfaceMessage(msg, data)
-    elif packetType == 2:
+        data = processinterfacemessage(msg, data)
+    elif packettype == 2:
         print("Received Receiver/Transmitter (0x02) message")
-    elif packetType == 3:
+    elif packettype == 3:
         print("Received undecoded RF (0x03) message")
-    elif packetType == 17:
+    elif packettype == 17:
         print("Received Lighting2 (0x11) message")
-        data = processLighting2Sensor(msg, data)
-    elif packetType == 80:
+        data = processlighting2sensor(msg, data)
+    elif packettype == 80:
         print("Received Temperature sensor (0x50) message")
-        data = processTempHumBaroSensor(msg, data)
-    elif packetType == 81:
+        data = processtemphumbarosensor(msg, data)
+    elif packettype == 81:
         print("Received Humidy sensor (0x51) message")
-        data = processTempHumBaroSensor(msg, data)
-    elif packetType == 82:
+        data = processtemphumbarosensor(msg, data)
+    elif packettype == 82:
         print("Received Temp & Humidity sensor (0x52) message")
-        data = processTempHumBaroSensor(msg, data)
-    elif packetType == 83:
+        data = processtemphumbarosensor(msg, data)
+    elif packettype == 83:
         print("Received Barometric sensor (0x53) message")
-        data = processTempHumBaroSensor(msg, data)
-    elif packetType == 84:
+        data = processtemphumbarosensor(msg, data)
+    elif packettype == 84:
         print("Received Temp, Hum, Baro sensor (0x54) message")
-        data = processTempHumBaroSensor(msg, data)
-    elif packetType == 85:
+        data = processtemphumbarosensor(msg, data)
+    elif packettype == 85:
         print("Received Rain sensor (0x55) message")
-    elif packetType == 86:
+    elif packettype == 86:
         print("Received Wind sensor (0x56) message")
-    elif packetType == 87:
+    elif packettype == 87:
         print("Received UV sensor (0x57) message")
-    elif packetType == 90:
+    elif packettype == 90:
         print("Received Energy usage sensor (0x5A) message")
-        data = processEnergyUsageSensor(msg, data)
+        data = processenergyusagesensor(msg, data)
     else:
-        print("Unsupported packet type " + str(packetType))
+        print("Unsupported packet type " + str(packettype))
     return data
 
 # 54784: sdb
@@ -210,7 +209,7 @@ def parseMessage(msg):
 # 30721: salon
 # 55154: conso
 
-def sendData(data, url, key):
+def senddata(data, url, key):
 
     feeds = {
         54784: {
@@ -243,15 +242,14 @@ def sendData(data, url, key):
         if "id" in data:
             id = data["id"]
 
-            #Do we have this id in our list?
+            # Do we have this id in our list?
             if id in feeds:
-                #Iterate over the data element we have a feed for
+                # Iterate over the data element we have a feed for
                 for i in feeds[id]:
-                    #Do we have data for the feed?
+                    # Do we have data for the feed?
                     if i in data:
-                        #Append to the array
+                        # Append to the array
                         array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
-
 
                 params = json.dumps(array)
                 print("JSON " + str(params))
@@ -268,8 +266,8 @@ def main():
     global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
-    #parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", argument_default="http://api.sen.se")
-    parser.add_argument("-k", "--key", dest="key", help = "sen.se key", metavar="URL", required=True)
+    # parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", argument_default="http://api.sen.se")
+    parser.add_argument("-k", "--key", dest="key", help="sen.se key", metavar="URL", required=True)
 
     url = "http://api.sen.se/events/"
 
@@ -277,7 +275,7 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    ser = serial.Serial(args.ttyport, 38400, timeout = 0.1)
+    ser = serial.Serial(args.ttyport, 38400, timeout=0.1)
     print(ser)
 
     # Reset command
@@ -296,16 +294,18 @@ def main():
         data = bytearray(ser.read(32))
         buffer += data
         if len(buffer) > 0:
-            packetLength = buffer[0]
-            if len(buffer) > packetLength:
-                if packetLength == 0:
+            packetlength = buffer[0]
+            if len(buffer) > packetlength:
+                if packetlength == 0:
                     print("Got actual message with length 0 - discarding")
                     del buffer[0:2]
                 else:
-                    msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
-                    del buffer[0:packetLength+1] #remove message
-                    data = parseMessage(msg)
-                    sendData(data, url, args.key)
+                    # size does not include size byte (so actual size is +1)
+                    msg = buffer[0:packetlength+1]
+                    # remove message
+                    del buffer[0:packetlength+1]
+                    data = parsemessage(msg)
+                    senddata(data, url, args.key)
 
 
 
