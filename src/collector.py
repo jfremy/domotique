@@ -129,7 +129,7 @@ def processenergyusagesensor(msg, data):
     print("ID " + str(data["id"]))
     data["count"] = msg[6]
     data["instant"] = accumulate(msg, 7, 4)
-    data["total"] = float(accumulate(msg, 11, 6)) / float(223666) # To get kWh cf doc from rfxcom
+    data["total"] = float(accumulate(msg, 11, 6)) / float(223666)  # To get kWh cf doc from rfxcom
     data["battery"] = (msg[17] & 0xF0) >> 4
     data["RSSI"] = msg[17] & 0x0F
 
@@ -208,61 +208,18 @@ def parsemessage(msg):
         print("Unsupported packet type " + str(packettype))
     return data
 
-# 54784: sdb
-# 45825: exterior
-# 48132: chambre
-# 30466: bureau
-# 30721: salon
-# 55154: conso
 
-
-def senddata(data, url, key):
-
-    feeds = {
-        54784: {
-            "temperature": 38350,
-            "humidity": 38355,
-            "baro": 38346
-        },
-        45825: {
-            "temperature": 38351,
-            "humidity": 38356
-        },
-        48132: {
-            "temperature": 38349,
-            "humidity": 38354
-        },
-        30466: {
-            "temperature": 38348,
-            "humidity": 38353
-        },
-        30721: {
-            "temperature": 38347,
-            "humidity": 38352
-        },
-        55154: {
-            "instant": 38345
-        }
-    }
+def senddata(data, url, appid, key):
     try:
-        array = []
-        if "id" in data:
-            id = data["id"]
-
-            # Do we have this id in our list?
-            if id in feeds:
-                # Iterate over the data element we have a feed for
-                for i in feeds[id]:
-                    # Do we have data for the feed?
-                    if i in data:
-                        # Append to the array
-                        array.append({'feed_id': feeds[id][i], 'value': data[i]})
-
-                params = json.dumps(array)
-                print("JSON " + str(params))
-                headers = {'Content-Type': 'application/json', 'sense_key': key}
-                req = urllib.request.Request(url, params.encode('utf-8'), headers)
-                urllib.request.urlopen(req)
+        params = json.dumps(data)
+        print("JSON " + str(params))
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Parse-Application-Id': appid,
+            'X-Parse-REST-API-Key': key
+        }
+        req = urllib.request.Request(url, params.encode('utf-8'), headers)
+        urllib.request.urlopen(req)
     except urllib.error.URLError as err:
         print(err)
     except:
@@ -274,9 +231,10 @@ def main():
     global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
-    parser.add_argument("-k", "--key", dest="key", help="sen.se key", metavar="URL", required=True)
+    parser.add_argument("-k", "--key", dest="key", help="Parse REST API Key", metavar="Key", required=True)
+    parser.add_argument("-a", "--app", dest="appid", help="Parse Application ID", metavar="ID", required=True)
 
-    url = "http://api.sen.se/events/"
+    url = "https://api.parse.com/classes/environment"
 
     args = parser.parse_args()
 
@@ -312,7 +270,7 @@ def main():
                     # remove message
                     del buffer[0:packetlength+1]
                     data = parsemessage(msg)
-                    senddata(data, url, args.key)
+                    senddata(data, url, args.appid, args.key)
 
 
 if __name__ == "__main__":
