@@ -13,19 +13,22 @@ import json
 
 
 # Close on ctrl+C
-def signal_handler(signal, frame):
+def signal_handler():
     print("Exiting on Ctrl+C")
     ser.close()
     sys.exit(0)
 
+
 def now():
     return datetime.datetime.utcnow().isoformat('T')
+
 
 def accumulate(buffer, offset, nbr):
     accu = 0
     for i in range(0, nbr):
         accu = accu*256 + buffer[offset + i]
     return accu
+
 
 def processinterfacemessage(msg, data):
     if data["packetLength"] != 13:
@@ -114,6 +117,7 @@ def processtemphumbarosensor(msg, data):
     print("RSSI " + str(data["RSSI"]))
     return data
 
+
 def processenergyusagesensor(msg, data):
     if data["packetLength"] != 17:
         print("Message with invalid length, got " + str(data["packetLength"]) + " expected 17")
@@ -134,6 +138,7 @@ def processenergyusagesensor(msg, data):
     print("Battery " + str(data["battery"]))
     print("RSSI " + str(data["RSSI"]))
     return data
+
 
 def processlighting2sensor(msg, data):
     if data["packetLength"] != 11:
@@ -156,6 +161,7 @@ def processlighting2sensor(msg, data):
     print("Level " + str(data["level"]))
     print("RSSI " + str(data["RSSI"]))
     return data
+
 
 def parsemessage(msg):
     print('Packet length ' + str(msg[0]))
@@ -209,6 +215,7 @@ def parsemessage(msg):
 # 30721: salon
 # 55154: conso
 
+
 def senddata(data, url, key):
 
     feeds = {
@@ -249,7 +256,7 @@ def senddata(data, url, key):
                     # Do we have data for the feed?
                     if i in data:
                         # Append to the array
-                        array.append({ 'feed_id': feeds[id][i], 'value': data[i]})
+                        array.append({'feed_id': feeds[id][i], 'value': data[i]})
 
                 params = json.dumps(array)
                 print("JSON " + str(params))
@@ -262,11 +269,11 @@ def senddata(data, url, key):
         print("Unexpected error:", sys.exc_info()[0])
     return
 
+
 def main():
     global ser
     parser = argparse.ArgumentParser(description='Collect home automation events from RFXCOM')
     parser.add_argument("-t", "--tty-port", dest="ttyport", help="open port TTY", metavar="TTY", required=True)
-    # parser.add_argument("-u", "--url", dest="url", help = "sen.se API URL", metavar="URL", argument_default="http://api.sen.se")
     parser.add_argument("-k", "--key", dest="key", help="sen.se key", metavar="URL", required=True)
 
     url = "http://api.sen.se/events/"
@@ -306,7 +313,6 @@ def main():
                     del buffer[0:packetlength+1]
                     data = parsemessage(msg)
                     senddata(data, url, args.key)
-
 
 
 if __name__ == "__main__":
