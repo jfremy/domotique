@@ -1,6 +1,7 @@
 __author__ = 'Jeff'
 
 import serial
+import io
 import time
 import signal
 import sys
@@ -202,17 +203,17 @@ def parseMessage(msg):
         print("Unsupported packet type " + str(packetType))
     return data
 
-# 54016: sdb
+# 54784: sdb
 # 45825: exterior
-# 51460: chambre
-# 22274: bureau
-# 5377 : salon
-# 34546: conso
+# 48132: chambre
+# 30466: bureau
+# 30721: salon
+# 55154: conso
 
 def sendData(data, url, key):
 
     feeds = {
-        54016: {
+        54784: {
             "temperature": 38350,
             "humidity": 38355,
             "baro": 38346
@@ -221,19 +222,19 @@ def sendData(data, url, key):
             "temperature": 38351,
             "humidity": 38356
         },
-        51460: {
+        48132: {
             "temperature": 38349,
             "humidity": 38354
         },
-        22274: {
+        30466: {
             "temperature": 38348,
             "humidity": 38353
         },
-        5377: {
+        30721: {
             "temperature": 38347,
             "humidity": 38352
         },
-        34546: {
+        55154: {
             "instant": 38345
         }
     }
@@ -276,7 +277,7 @@ def main():
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    ser = serial.Serial(args.ttyport, 38400, timeout = 0.2)
+    ser = serial.Serial(args.ttyport, 38400, timeout = 0.1)
     print(ser)
 
     # Reset command
@@ -285,7 +286,7 @@ def main():
     status = bytearray.fromhex("0D00000102000000000000000000")
 
     ser.write(reset)
-    time.sleep(0.1)
+    time.sleep(0.3)
     ser.flushInput()
     ser.write(status)
 
@@ -299,7 +300,7 @@ def main():
             if len(buffer) > packetLength:
                 if packetLength == 0:
                     print("Got actual message with length 0 - discarding")
-                    del buffer[0:1]
+                    del buffer[0:2]
                 else:
                     msg = buffer[0:packetLength+1] #size does not include size byte (so actual size is +1)
                     del buffer[0:packetLength+1] #remove message
